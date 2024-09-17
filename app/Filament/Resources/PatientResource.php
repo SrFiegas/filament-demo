@@ -4,8 +4,10 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PatientResource\Pages;
 use App\Filament\Resources\PatientResource\RelationManagers;
+use App\Filament\Resources\PatientResource\RelationManagers\TreatmentsRelationManager;
 use App\Models\Owner;
 use App\Models\Patient;
+use App\Models\Treatment;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -13,6 +15,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -33,7 +37,7 @@ class PatientResource extends Resource
                     'dog' => 'Dog',
                     'rabbit' => 'Rabbit',
                 ])->required(),
-                DatePicker::make('date_of_birth')->required()->maxDate(now()),
+                DatePicker::make('date_of_birth')->required()->maxDate(now())->native(false),
                 Select::make('owner_id')->relationship('owner','name')->required()->createOptionForm([
                     TextInput::make('name')->required()->maxLength(255),
                     TextInput::make('email')->required()->maxLength(255)->email()->label('Email Address')->placeholder('test@test.com'),
@@ -46,13 +50,21 @@ class PatientResource extends Resource
     {
         return $table
             ->columns([
-                //
+                TextColumn::make('name')->searchable(),
+                TextColumn::make('type'),
+                TextColumn::make('date_of_birth')->sortable(),
+                TextColumn::make('owner.name')->searchable(),
             ])
             ->filters([
-                //
+                SelectFilter::make('type')->options([
+                    'cat' => 'Cat',
+                    'dog' => 'Dog',
+                    'rabbit' => 'Rabbit'
+                ])
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -64,7 +76,7 @@ class PatientResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            TreatmentsRelationManager::class
         ];
     }
 
